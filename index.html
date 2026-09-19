@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wielka Korona Sudetów — interaktywna mapa i zdobywanie szczytów</title>
+<meta name="description" content="Wielka Korona Sudetów — interaktywna mapa 63 najwybitniejszych szczytów Sudetów. Zaloguj się i zaznaczaj zdobyte szczyty wprost na mapie. Pełny opis projektu na viasudetica.eu.">
+<meta name="keywords" content="Sudety, Wielka Korona Sudetów, Korona Sudetów, Diamentowa Korona Sudetów, mapa szczytów, szczyty Sudetów, Karkonosze, Śnieżka">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Wojciech Rogala">
+<link rel="canonical" href="https://wielkakoronasudetow.pl/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wielka Korona Sudetów">
+<meta property="og:title" content="Wielka Korona Sudetów — interaktywna mapa i zdobywanie szczytów">
+<meta property="og:description" content="Interaktywna mapa 63 najwybitniejszych szczytów Sudetów — zaloguj się i zaznaczaj zdobyte szczyty. Pełny opis projektu na viasudetica.eu.">
+<meta property="og:url" content="https://wielkakoronasudetow.pl/">
+<meta property="og:image" content="https://viasudetica.eu/hero.jpg">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:locale:alternate" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wielka Korona Sudetów — interaktywna mapa i zdobywanie szczytów">
+<meta name="twitter:description" content="Interaktywna mapa 63 najwybitniejszych szczytów Sudetów — zaloguj się i zaznaczaj zdobyte szczyty. Pełny opis projektu na viasudetica.eu.">
+<meta name="twitter:image" content="https://viasudetica.eu/hero.jpg">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Wielka Korona Sudetów",
+  "alternateName": ["Korona Sudetów", "Diamentowa Korona Sudetów", "The Great Crown of the Sudetes"],
+  "url": "https://wielkakoronasudetow.pl/",
+  "description": "Interaktywna mapa i system zdobywania Korony Sudetów, Wielkiej Korony Sudetów i Diamentowej Korony Sudetów — 63 najwybitniejszych szczytów Sudetów w Polsce, Czechach i Niemczech.",
+  "inLanguage": ["pl", "en"],
+  "about": {
+    "@type": "Place",
+    "name": "Sudety",
+    "alternateName": "Sudetes"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+<link rel="stylesheet" href="https://viasudetica.eu/styles.css">
+<style>
+  /* Dopasowania tylko dla strony wielkakoronasudetow.pl — mapa od razu na starcie, bez zdjęcia hero */
+  .wks-lead{max-width:820px;margin:0 auto;padding:2.75rem 1.5rem 1.5rem;text-align:center}
+  .wks-lead-eyebrow{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--clay,#b5651d);font-weight:600;margin-bottom:.6rem}
+  .wks-lead h1{font-size:clamp(1.9rem,4vw,2.8rem);margin:0 0 .75rem;line-height:1.15}
+  .wks-lead p{color:var(--muted,#6b6459);font-size:1.02rem;line-height:1.6;margin:0}
+  .wks-more{max-width:820px;margin:0 auto;padding:2.25rem 1.5rem 3.5rem;text-align:center}
+  .wks-more-card{border:1px solid rgba(0,0,0,.1);border-radius:14px;padding:1.75rem 1.5rem;background:var(--parchment,#f6f1e7)}
+  .wks-more-card h2{font-size:1.25rem;margin:0 0 .6rem}
+  .wks-more-card p{color:var(--muted,#6b6459);margin:0 0 1.1rem;line-height:1.55}
+  .wks-more-link{display:inline-block;padding:.65rem 1.4rem;border-radius:8px;background:var(--clay,#b5651d);color:#fff;text-decoration:none;font-weight:600;font-size:.95rem}
+  .wks-more-link:hover{opacity:.9}
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <defs>
+    <!-- Crown 1: copper + sapphires (Korona Sudetów) -->
+    <symbol id="ci-ks" viewBox="0 0 72 60" overflow="visible">
+      <polygon points="2,52 2,38 14,26 26,38 36,18 46,38 58,26 70,38 70,52" fill="#b5651d"/>
+      <rect x="2" y="38" width="68" height="14" rx="4" fill="#b5651d"/>
+      <rect x="2" y="42" width="68" height="2.5" fill="#e08040" opacity=".4"/>
+      <circle cx="14" cy="22" r="6.5" fill="#b5651d"/>
+      <circle cx="36" cy="14" r="7.5" fill="#b5651d"/>
+      <circle cx="58" cy="22" r="6.5" fill="#b5651d"/>
+      <circle cx="12" cy="20" r="2.5" fill="#e08040" opacity=".65"/>
+      <circle cx="34" cy="12" r="3"   fill="#e08040" opacity=".65"/>
+      <circle cx="56" cy="20" r="2.5" fill="#e08040" opacity=".65"/>
+      <ellipse cx="15" cy="47" rx="5"   ry="5.5" fill="#1e3d94"/>
+      <ellipse cx="36" cy="47" rx="6"   ry="6"   fill="#1e3d94"/>
+      <ellipse cx="57" cy="47" rx="5"   ry="5.5" fill="#1e3d94"/>
+      <ellipse cx="13" cy="44.5" rx="2"   ry="2"   fill="#5b8bec" opacity=".7"/>
+      <ellipse cx="34" cy="44.5" rx="2.5" ry="2.5" fill="#5b8bec" opacity=".7"/>
+      <ellipse cx="55" cy="44.5" rx="2"   ry="2"   fill="#5b8bec" opacity=".7"/>
+    </symbol>
+    <!-- Crown 2: silver + rubies (Wielka Korona) -->
+    <symbol id="ci-wks" viewBox="0 0 72 60" overflow="visible">
+      <polygon points="2,52 2,40 10,8 18,30 26,4 36,28 46,4 54,30 62,8 70,40 70,52" fill="#9ca3b4"/>
+      <rect x="2" y="40" width="68" height="14" rx="4" fill="#9ca3b4"/>
+      <rect x="2" y="44" width="68" height="2.5" fill="#d0d6e8" opacity=".5"/>
+      <rect x="8"  y="1"  width="5" height="10" rx="1.5" fill="#9ca3b4"/>
+      <rect x="5"  y="5"  width="11" height="4" rx="1.5" fill="#9ca3b4"/>
+      <rect x="34" y="-1" width="5" height="10" rx="1.5" fill="#9ca3b4"/>
+      <rect x="31" y="3"  width="11" height="4" rx="1.5" fill="#9ca3b4"/>
+      <rect x="60" y="1"  width="5" height="10" rx="1.5" fill="#9ca3b4"/>
+      <rect x="57" y="5"  width="11" height="4" rx="1.5" fill="#9ca3b4"/>
+      <rect x="9"  y="2"  width="2" height="4" fill="#d0d6e8" opacity=".6" rx=".5"/>
+      <rect x="35" y="0"  width="2" height="4" fill="#d0d6e8" opacity=".6" rx=".5"/>
+      <rect x="61" y="2"  width="2" height="4" fill="#d0d6e8" opacity=".6" rx=".5"/>
+      <circle cx="26" cy="2" r="4" fill="#9ca3b4"/>
+      <circle cx="46" cy="2" r="4" fill="#9ca3b4"/>
+      <circle cx="25" cy="1" r="1.5" fill="#d0d6e8" opacity=".7"/>
+      <circle cx="45" cy="1" r="1.5" fill="#d0d6e8" opacity=".7"/>
+      <ellipse cx="15" cy="47" rx="5"   ry="5.5" fill="#a01928"/>
+      <ellipse cx="36" cy="47" rx="6"   ry="6"   fill="#a01928"/>
+      <ellipse cx="57" cy="47" rx="5"   ry="5.5" fill="#a01928"/>
+      <ellipse cx="13" cy="44.5" rx="2"   ry="2"   fill="#e8506a" opacity=".7"/>
+      <ellipse cx="34" cy="44.5" rx="2.5" ry="2.5" fill="#e8506a" opacity=".7"/>
+      <ellipse cx="55" cy="44.5" rx="2"   ry="2"   fill="#e8506a" opacity=".7"/>
+    </symbol>
+    <!-- Crown 3: gold + diamonds (Diamentowa Korona) -->
+    <symbol id="ci-dks" viewBox="0 0 72 64" overflow="visible">
+      <polygon points="2,58 2,44 10,28 22,38 36,34 50,38 62,28 70,44 70,58" fill="#c8940a"/>
+      <rect x="2" y="44" width="68" height="14" rx="4" fill="#c8940a"/>
+      <rect x="2" y="48" width="68" height="2.5" fill="#f0c030" opacity=".45"/>
+      <path d="M 8,42 Q 36,6 64,42"  stroke="#c8940a" stroke-width="7"  fill="none" stroke-linecap="round"/>
+      <path d="M 8,42 Q 36,6 64,42"  stroke="#f0c030" stroke-width="2"  fill="none" stroke-linecap="round" opacity=".45"/>
+      <path d="M 22,44 Q 36,12 50,44" stroke="#c8940a" stroke-width="6"  fill="none" stroke-linecap="round" opacity=".85"/>
+      <circle cx="36" cy="20" r="6" fill="#c8940a"/>
+      <circle cx="34" cy="18" r="2.5" fill="#f0c030" opacity=".65"/>
+      <rect x="33.5" y="0"  width="5"  height="14" rx="2" fill="#c8940a"/>
+      <rect x="27"   y="4"  width="18" height="5"  rx="2" fill="#c8940a"/>
+      <rect x="34.5" y="1"  width="2"  height="6"  fill="#f0c030" opacity=".45" rx="1"/>
+      <polygon points="15,41 20,47 15,53 10,47" fill="#c8dcf0"/>
+      <polygon points="36,40 42,47 36,54 30,47" fill="#c8dcf0"/>
+      <polygon points="57,41 62,47 57,53 52,47" fill="#c8dcf0"/>
+      <line x1="15" y1="41" x2="15" y2="53" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <line x1="10" y1="47" x2="20" y2="47" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <line x1="36" y1="40" x2="36" y2="54" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <line x1="30" y1="47" x2="42" y2="47" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <line x1="57" y1="41" x2="57" y2="53" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <line x1="52" y1="47" x2="62" y2="47" stroke="#8aaace" stroke-width=".7" opacity=".6"/>
+      <circle cx="13" cy="43" r="1.5" fill="white" opacity=".9"/>
+      <circle cx="34" cy="42" r="1.8" fill="white" opacity=".9"/>
+      <circle cx="55" cy="43" r="1.5" fill="white" opacity=".9"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav>
+  <div class="nav-logo">Wielka Korona <span>Sudetów</span></div>
+  <div class="nav-links">
+    <a href="https://viasudetica.eu/#about" class="lang-pl">O projekcie</a>
+    <a href="https://viasudetica.eu/#about" class="lang-en" style="display:none">About</a>
+    <a href="https://viasudetica.eu/#peaks-section" class="lang-pl">Wykaz szczytów</a>
+    <a href="https://viasudetica.eu/#peaks-section" class="lang-en" style="display:none">Peak list</a>
+    <a href="https://viasudetica.eu/" class="lang-pl">viasudetica.eu →</a>
+    <a href="https://viasudetica.eu/" class="lang-en" style="display:none">viasudetica.eu →</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.7rem">
+    <button id="feedback-btn" title="Zgłoś uwagi / Send feedback" onclick="showFeedbackOverlay()" style="background:none;border:1px solid rgba(255,255,255,0.25);color:#E6EDF3;border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:0.4rem;transition:background 0.2s">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="lang-pl">Zgłoś uwagi</span><span class="lang-en" style="display:none">Feedback</span>
+    </button>
+    <button id="share-btn" title="Udostępnij / Share" onclick="shareApp()" style="background:none;border:1px solid rgba(255,255,255,0.25);color:#E6EDF3;border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:0.4rem;transition:background 0.2s">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      <span class="lang-pl">Udostępnij</span><span class="lang-en" style="display:none">Share</span>
+    </button>
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-pl" onclick="setLang('pl')">PL</button>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <div id="user-bar-nav" style="display:flex;align-items:center;gap:0.5rem"></div>
+  </div>
+</nav>
+
+<!-- LEAD: krótki nagłówek zamiast zdjęcia hero -->
+<div class="wks-lead">
+  <div class="wks-lead-eyebrow lang-pl">Sudety · Polska / Czechy / Niemcy</div>
+  <div class="wks-lead-eyebrow lang-en" style="display:none">Sudetes · Poland / Czechia / Germany</div>
+  <h1 class="lang-pl">Wielka Korona <em>Sudetów</em></h1>
+  <h1 class="lang-en" style="display:none">The Great Crown <em>of the Sudetes</em></h1>
+  <p class="lang-pl">Zaloguj się i zaznaczaj na mapie zdobyte szczyty — Twój postęp jest wspólny z viasudetica.eu.</p>
+  <p class="lang-en" style="display:none">Log in and mark conquered summits right on the map — your progress is shared with viasudetica.eu.</p>
+</div>
+
+<!-- MAPA -->
+<section id="map-section">
+  <div class="map-section-inner">
+    <div id="topbar">
+      <div class="tb-title">Korona <span style="color:#E6EDF3;font-weight:400">Sudetów</span></div>
+      <div class="tb-sep"></div>
+      <div class="prog-block">
+        <div class="prog-label"><span class="pl-name"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-ks"/></svg> Korona</span><span class="pl-count wk-count"><span id="ks-done">0</span>/8</span></div>
+        <div class="prog-bar"><div class="prog-fill wk-fill" id="ks-bar" style="width:0%"></div></div>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="prog-block" id="wks-prog-block" style="opacity:0.35;transition:opacity 0.5s">
+        <div class="prog-label"><span class="pl-name"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-wks"/></svg> Wielka</span><span class="pl-count wk-count"><span id="wks-done">0</span>/31</span></div>
+        <div class="prog-bar"><div class="prog-fill wk-fill" id="wks-bar" style="width:0%"></div></div>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="prog-block" id="dks-prog-block" style="opacity:0.35;transition:opacity 0.5s">
+        <div class="prog-label"><span class="pl-name"><svg class="ci" viewBox="0 0 72 64"><use href="#ci-dks"/></svg> Diamentowa</span><span class="pl-count dk-count"><span id="dks-done">0</span>/24</span></div>
+        <div class="prog-bar"><div class="prog-fill dk-fill" id="dks-bar" style="width:0%"></div></div>
+      </div>
+      <div id="user-bar"></div>
+  <button class="btn-reset" onclick="resetAll()">Reset</button>
+    </div>
+    <div id="game-wrap">
+      <div id="map"></div>
+      <div id="sidebar">
+        <div class="sb-tabs">
+          <div class="sb-tab active" id="tab-ks"  onclick="switchTab('ks')"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-ks"/></svg> Korona</div>
+          <div class="sb-tab"          id="tab-wks" onclick="switchTab('wks')"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-wks"/></svg> Wielka</div>
+          <div class="sb-tab dk-tab"        id="tab-dks" onclick="switchTab('dks')"><svg class="ci" viewBox="0 0 72 64"><use href="#ci-dks"/></svg> Diamentowa</div>
+        </div>
+        <div class="sb-list" id="list-ks"></div>
+        <div class="sb-list" id="list-wks" style="display:none"></div>
+        <div class="sb-list" id="list-dks" style="display:none"></div>
+      </div>
+    </div>
+    <div class="map-legend fade-in">
+
+      <button id="peaks-ks-btn" onclick="togglePeaksLayer('ks')" class="grupy-toggle-btn active lang-pl"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-ks"/></svg>Korona</button>
+      <button id="peaks-ks-btn-en" onclick="togglePeaksLayer('ks')" class="grupy-toggle-btn active lang-en" style="display:none"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-ks"/></svg>Crown</button>
+      <button id="peaks-wks-btn" onclick="togglePeaksLayer('wks')" class="grupy-toggle-btn lang-pl"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-wks"/></svg>Wielka Korona</button>
+      <button id="peaks-wks-btn-en" onclick="togglePeaksLayer('wks')" class="grupy-toggle-btn lang-en" style="display:none"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-wks"/></svg>Great Crown</button>
+      <button id="peaks-dks-btn" onclick="togglePeaksLayer('dks')" class="grupy-toggle-btn lang-pl"><svg class="ci" viewBox="0 0 72 64"><use href="#ci-dks"/></svg>Diamentowa</button>
+      <button id="peaks-dks-btn-en" onclick="togglePeaksLayer('dks')" class="grupy-toggle-btn lang-en" style="display:none"><svg class="ci" viewBox="0 0 72 64"><use href="#ci-dks"/></svg>Diamond</button>
+      <button id="basemap-standard-btn" onclick="setBasemap('standard')" class="grupy-toggle-btn basemap-btn active lang-pl" data-basemap="standard">🗺️ Standardowa</button>
+      <button id="basemap-standard-btn-en" onclick="setBasemap('standard')" class="grupy-toggle-btn basemap-btn active lang-en" style="display:none" data-basemap="standard">🗺️ Standard</button>
+      <button id="basemap-outdoor-btn" onclick="setBasemap('outdoor')" class="grupy-toggle-btn basemap-btn lang-pl" data-basemap="outdoor">🥾 Turystyczna</button>
+      <button id="basemap-outdoor-btn-en" onclick="setBasemap('outdoor')" class="grupy-toggle-btn basemap-btn lang-en" style="display:none" data-basemap="outdoor">🥾 Outdoor</button>
+      <button id="sudety-btn" onclick="toggleSudety()" class="grupy-toggle-btn lang-pl">🔲 Granica Sudetów</button>
+      <button id="sudety-btn-en" onclick="toggleSudety()" class="grupy-toggle-btn lang-en" style="display:none">🔲 Sudetes boundary</button>
+      <button id="grupy-btn" onclick="toggleGrupy()" class="grupy-toggle-btn lang-pl">🗺 Grupy górskie</button>
+      <button id="grupy-btn-en" onclick="toggleGrupy()" class="grupy-toggle-btn lang-en" style="display:none">🗺 Mountain groups</button>
+      <button id="pasma-btn" onclick="togglePasma()" class="grupy-toggle-btn lang-pl">🏔 Pasma</button>
+      <button id="pasma-btn-en" onclick="togglePasma()" class="grupy-toggle-btn lang-en" style="display:none">🏔 Ranges</button>
+    </div>
+    <div id="grupy-legend" class="grupy-legend-row" style="display:none">
+      <div class="ml-item"><div class="ml-line" style="background:#5F20B0"></div><span>Sudety Łużyckie</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#005A8E"></div><span>Sudety Zachodnie</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#048870"></div><span>Pogórze Zachodniosudeckie</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#C4983A"></div><span>Sudety Środkowe</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#BF4E30"></div><span>Sudety Orlickie</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#8B0D16"></div><span>Sudety Wschodnie</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#2E7D32"></div><span>Sudety Kulmowe</span></div>
+      <div class="ml-item"><div class="ml-line" style="background:#C97800"></div><span>Przedgórze Sudeckie</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWIEDZ SIĘ WIĘCEJ -->
+<div class="wks-more">
+  <div class="wks-more-card">
+    <h2 class="lang-pl">Chcesz dowiedzieć się więcej?</h2>
+    <h2 class="lang-en" style="display:none">Want to learn more?</h2>
+    <p class="lang-pl">Pełny opis projektu, wyjaśnienie czym jest wybitność i izolacja szczytu, cała lista 63 szczytów oraz ranking zdobywców — na viasudetica.eu.</p>
+    <p class="lang-en" style="display:none">Full project description, what prominence and isolation mean, the complete list of 63 summits and the leaderboard — on viasudetica.eu.</p>
+    <a class="wks-more-link lang-pl" href="https://viasudetica.eu/">Przejdź na viasudetica.eu →</a>
+    <a class="wks-more-link lang-en" style="display:none" href="https://viasudetica.eu/">Go to viasudetica.eu →</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-title">Wielka Korona Sudetów</div>
+    <div class="footer-sub">Korona · Wielka Korona · Diamentowa Korona Sudetów · PL / CZ / DE</div>
+    <div class="footer-sources lang-pl">
+      Wybitność i izolacja: własne pomiary autora · Mapa: © <a href="https://www.openstreetmap.org">OpenStreetMap</a> contributors · Leaflet
+    </div>
+    <div class="footer-sources lang-en" style="display:none">
+      Prominence &amp; isolation: author's own measurements · Map: © <a href="https://www.openstreetmap.org">OpenStreetMap</a> contributors · Leaflet
+    </div>
+    <div class="footer-copy" style="margin-top:1.5rem;line-height:2">
+      Autor · Author: <strong style="color:var(--cream)">Wojciech Rogala</strong> · <a href="mailto:rogalaw@wp.pl" style="color:var(--clay)">rogalaw@wp.pl</a><br>
+      © 2025–2026 Wojciech Rogala · Wielka Korona Sudetów<br>
+      <span style="font-size:9px">Wszelkie prawa zastrzeżone. Kopiowanie, reprodukcja lub wykorzystywanie treści bez pisemnej zgody autora jest zabronione. · All rights reserved. Copying, reproduction or use of content without the author's written consent is prohibited.</span>
+    </div>
+  </div>
+</footer>
+
+<div id="unlock-overlay">
+  <div class="unlock-box">
+    <div class="unlock-icon"><svg class="ci" viewBox="0 0 72 60"><use href="#ci-ks"/></svg></div>
+    <div id="unlock-title" class="unlock-title">Korona Sudetów zdobyta!</div>
+    <div id="unlock-sub" class="unlock-sub"></div>
+    <button id="unlock-close-btn" class="unlock-close" onclick="closeUnlock('wks')">Zaczynam Wielką Koronę →</button>
+  </div>
+</div>
+
+<script type="module" src="https://viasudetica.eu/firebase-init.js"></script>
+<script src="https://viasudetica.eu/pasma-geojson.js"></script>
+<script src="https://viasudetica.eu/peaks-data.js"></script>
+<script src="https://viasudetica.eu/app.js"></script>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay" class="hidden">
+  <div class="auth-box">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.25rem">
+      <div class="auth-logo">⛰ Korona Sudetów</div>
+      <button onclick="hideAuthOverlay()" style="background:none;border:none;color:#8B949E;font-size:1.2rem;cursor:pointer;line-height:1;padding:0 2px" title="Zamknij">✕</button>
+    </div>
+    <div class="auth-sub">Zaloguj się aby zapisywać postęp</div>
+    <div class="auth-tabs">
+      <div class="auth-tab on" id="at-login" onclick="authTab('login')">Logowanie</div>
+      <div class="auth-tab" id="at-reg" onclick="authTab('reg')">Rejestracja</div>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="li-email" placeholder="twoj@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Hasło</label><input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="auth-btn" onclick="doLogin()">Zaloguj się</button>
+    </div>
+    <div id="auth-reg" style="display:none">
+      <div class="auth-field"><label>Imię i nazwisko / Nick</label><input type="text" id="re-name" placeholder="Jan Kowalski"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="re-email" placeholder="twoj@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Hasło (min. 6 znaków)</label><input type="password" id="re-pass" placeholder="••••••••" autocomplete="new-password"></div>
+      <button class="auth-btn" onclick="doRegister()">Zarejestruj się</button>
+    </div>
+    <div class="auth-err" id="auth-err"></div>
+    <div class="auth-note">Twoje dane są bezpieczne — logowanie przez Google Firebase</div>
+  </div>
+</div>
+
+<!-- FEEDBACK OVERLAY -->
+<div id="feedback-overlay" class="hidden">
+  <div class="fb-box">
+    <div id="fb-form-view">
+      <div class="fb-hdr">
+        <div class="fb-title">✎ Zgłoś uwagi</div>
+        <button class="fb-close" onclick="hideFeedbackOverlay()" title="Zamknij">✕</button>
+      </div>
+      <div class="fb-sub">Masz pomysł na usprawnienie? Coś nie działa? Napisz — czytam każdą wiadomość.</div>
+      <div class="fb-field"><label>Wiadomość</label><textarea id="fb-message" placeholder="Np. brakuje mi filtra po województwie..."></textarea></div>
+      <div class="fb-field"><label>Twój e-mail (opcjonalnie, jeśli chcesz odpowiedź)</label><input type="email" id="fb-email" placeholder="twoj@email.com" autocomplete="email"></div>
+      <button class="fb-btn" id="fb-submit-btn" onclick="submitFeedback()">Wyślij uwagę</button>
+      <div class="fb-err" id="fb-err"></div>
+      <div class="fb-note">Wiadomość trafi bezpośrednio do autora strony.</div>
+    </div>
+    <div id="fb-ok-view" style="display:none">
+      <div class="fb-ok">
+        <div class="fb-ok-icon">✓</div>
+        <div class="fb-ok-text">Dziękuję za wiadomość!</div>
+        <div class="fb-ok-sub">Zostanie przeczytana najszybciej, jak to możliwe.</div>
+      </div>
+      <button class="fb-btn" onclick="hideFeedbackOverlay()">Zamknij</button>
+    </div>
+  </div>
+</div>
+
+<!-- RANKING OVERLAY -->
+<div id="ranking-overlay" class="hidden">
+  <div class="rank-box">
+    <div class="rank-hdr">
+      <h2>🏆 Zdobywcy Korony Sudetów</h2>
+      <button class="rank-close" onclick="closeRanking()">✕</button>
+    </div>
+    <div class="rank-body">
+      <div class="rank-tabs">
+        <button class="rank-tab on" id="rt-all" onclick="rankTab('all')">Wszyscy</button>
+        <button class="rank-tab" id="rt-wk" onclick="rankTab('wk')">Wielka Korona ✓</button>
+        <button class="rank-tab dk" id="rt-dk" onclick="rankTab('dk')">Diamentowa ✓</button>
+      </div>
+      <div id="rank-content"><div class="rank-loading">Ładowanie...</div></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
