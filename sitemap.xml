@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://wielkakoronasudetow.pl/</loc>
-    <lastmod>2026-09-19</lastmod>
+    <lastmod>2026-09-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://wielkakoronasudetow.pl/korona-sudetow-mapa.jpg</image:loc>
+      <image:title>Mapa Korony Sudetów</image:title>
+      <image:caption>Mapa Korony Sudetów, Wielkiej Korony Sudetów i Diamentowej Korony Sudetów z zaznaczonymi szczytami i granicą Sudetów</image:caption>
+    </image:image>
   </url>
 </urlset>
