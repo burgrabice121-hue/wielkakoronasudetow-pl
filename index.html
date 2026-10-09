@@ -288,7 +288,7 @@
 <script type="module" src="https://viasudetica.eu/firebase-init.js?v=20261004"></script>
 <script src="https://viasudetica.eu/pasma-geojson.js?v=20261009b"></script>
 <script src="https://viasudetica.eu/peaks-data.js"></script>
-<script src="https://viasudetica.eu/app.js?v=20261009d"></script><script src="https://viasudetica.eu/diary.js?v=20261009"></script>
+<script src="https://viasudetica.eu/app.js?v=20261009e"></script><script src="https://viasudetica.eu/diary.js?v=20261009"></script>
 
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay" class="hidden">
@@ -340,24 +340,6 @@
         <div class="fb-ok-sub">Zostanie przeczytana najszybciej, jak to możliwe.</div>
       </div>
       <button class="fb-btn" onclick="hideFeedbackOverlay()">Zamknij</button>
-    </div>
-  </div>
-</div>
-
-<!-- RANKING OVERLAY -->
-<div id="ranking-overlay" class="hidden">
-  <div class="rank-box">
-    <div class="rank-hdr">
-      <h2>🏆 Zdobywcy Korony Sudetów</h2>
-      <button class="rank-close" onclick="closeRanking()">✕</button>
-    </div>
-    <div class="rank-body">
-      <div class="rank-tabs">
-        <button class="rank-tab on" id="rt-all" onclick="rankTab('all')">Wszyscy</button>
-        <button class="rank-tab" id="rt-wk" onclick="rankTab('wk')">Wielka Korona ✓</button>
-        <button class="rank-tab dk" id="rt-dk" onclick="rankTab('dk')">Diamentowa ✓</button>
-      </div>
-      <div id="rank-content"><div class="rank-loading">Ładowanie...</div></div>
     </div>
   </div>
 </div>
